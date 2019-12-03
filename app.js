@@ -36,6 +36,7 @@ let app = client.connect()
     app.use(express.static(path.join(__dirname, 'public')));
     app.use(express.static(path.join(__dirname, 'react')));
     app.use(fileUpload())
+
     // first param is the route, second param is the function that is called for that route
     //app.use('/', indexRouter);
     app.use('/api/v1/users', usersRouter);
