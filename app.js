@@ -8,7 +8,7 @@ const fileUpload = require('express-fileupload')
 
 //routes we are binding
 var indexRouter = require('./views/index');
-var usersRouter = require('./routes/api/v1/users');
+var usersRouter = require('./routes/api/v1/Users');
 var chessOpeningsRouter = require('./routes/api/v1/ChessOpenings');
 
 const cors = require('cors')
