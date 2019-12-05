@@ -6,7 +6,7 @@ const ObjectId = require('mongodb').ObjectID
 
 function verifyToken(req, res, next) {
 
-  //get authorization header from api packet
+  //get authorization header from api packetm
   let auth = req.headers('authorization')
   //check to be sure header I got the authorized header
   if (auth !== 'undefined') {
@@ -46,6 +46,7 @@ else {
 /* GET home page. */
 router.get('/', function (req, res, next) {
   try {
+    //.to array takes my objects in my db and converts to an array of objects.
     req.app.locals.collectionOpenings.find({}).toArray(function (err, result) {
       if (err) {
         throw err;
@@ -55,6 +56,7 @@ router.get('/', function (req, res, next) {
 
     })
   }
+  // res.json takes array of objects and converts it to json then sends it to whoever is req info.(react, postman etc..)
   catch (error) {
     console.log('Error, error')
   }

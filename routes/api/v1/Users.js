@@ -28,7 +28,7 @@ router.get('/', function (req, res, next) {
 router.post('/', function (req, res, next) {
     console.log(req.body)
     console.log('POST')
-    req.app.locals.collectionsUsers.findOne({ email: req.body.email })
+    req.app.locals.collectionUsers.findOne({ email: req.body.email })
         .then(foundDoc => {
             if (foundDoc !== null) {
                 throw new Error("User Exists")
@@ -39,7 +39,7 @@ router.post('/', function (req, res, next) {
         .then(passwordHash => {
             req.body.passwordHash = passwordHash
             delete req.body.password
-
+            console.log(req.body)
             return req.app.locals.collectionUsers.insertOne(req.body)
         })
         .then(result => {
@@ -53,47 +53,51 @@ router.post('/', function (req, res, next) {
 
 router.post('/login', function (req, res, next) {
 
-
-    console.log(req.body)
-    console.log('POST')
-    req.app.locals.collectionsUsers.findOne({ email: req.body.email })
+    req.app.locals.collectionUsers.findOne({ email: req.body.email })
         .then(foundDoc => {
 
+
+
             if (foundDoc === null) {
+
                 throw new Error("No such user")
             }
 
-            return bcrypt.compare(req.body.password, foundDoc.passwordHash)
+
+            bcrypt.compare(req.body.password, foundDoc.passwordHash)
+                .then( validPassword  => {
+                    console.log(validPassword)
+                    if (validPassword != true) {
+                        throw new Error("Invalid Password")
+                    }
+                    console.log(foundDoc)
+
+                    // create jwt
+                    return new Promise((resolve, reject) => {
+                        jwt.sign({ email: foundDoc.email }, secret, (error, token) => {
+                            if (error !== null) {
+                                reject(error)
+                            }
+                            else {
+                                resolve(token)
+                            }
+                        })
+
+                    })
+                        .then(token => {
+                            console.log(token)
+                            res.json(token)
+                        })
+
+                })
         })
-        .then(validPassword => {
-
-            if (validPassword != true) {
-                throw new Error("INvalid Password")
-            }
-
-            // create jwt
-            return new Promise((resolve, reject) => {
-                jwt.sign({ email: foundDoc.email }, secret, (error, token) => {
-                    if (error !== null) {
-                        reject(error)
-                    }
-                    else {
-                        resolve(token)
-                    }
-                })
-
-            })
-                .then(token => {
-                    res.json(token)
-                })
-                .catch(error => {
-                    res.status(403).statusMessage(error.msg)
-                })
+        .catch(error => {
+            res.status(403)
         })
 })
 
 router.post('/oauth/google', function (req, res, next) {
-    console.log(req.body)
+
     // verify google token
     googleAuth.verifyIdTokenAsync({
         idToken: req.body.tokenId,
@@ -103,18 +107,18 @@ router.post('/oauth/google', function (req, res, next) {
             return ticket.getPayload()
         })
         .then(payload => {
-
-            return req.app.locals.collectionsUsers.findOne({ email: payload.email })
+            return req.app.locals.collectionUsers.findOne({ email: payload.email })
         })
         .then(foundDoc => {
-
+            console.log("Doc Found")
             if (foundDoc === null) {
+                console.log("no user")
                 throw new Error("No such user")
             }
 
             // create jwt
             return new Promise((resolve, reject) => {
-                jwt.sign({ email: req.body.email }, secret, (error, token) => {
+                jwt.sign({ email: foundDoc.email }, secret, { expiresIn: '1h' }, (error, token) => {
                     if (error !== null) {
                         reject(error)
                     }
